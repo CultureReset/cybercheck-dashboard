@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 40px 32px;
+      border: 1px solid #334155;
+    }
+
+    .auth-card h1 {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .auth-card p.subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 28px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+
+    .tabs button {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tabs button.active {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      border-color: #3b82f6;
+    }
+
+    .form-group select option {
+      background: #0f172a;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .error-msg {
+      background: #7f1d1d;
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .success-msg {
+      background: #14532d;
+      color: #86efac;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .forgot-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      color: #3b82f6;
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .forgot-link:hover { text-decoration: underline; }
+
+    #signup-fields { display: none; }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1>Welcome</h1>
+      <p class="subtitle">Manage your business website</p>
+
+      <div class="tabs">
+        <button class="active" onclick="showTab('login')">Log In</button>
+        <button onclick="showTab('signup')">Sign Up</button>
+      </div>
+
+      <div class="error-msg" id="error-msg"></div>
+      <div class="success-msg" id="success-msg"></div>
+
+      <form id="auth-form" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" required placeholder="you@email.com">
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required placeholder="Min 6 characters" minlength="6">
+        </div>
+
+        <div id="signup-fields">
+          <div class="form-group">
+            <label for="business-name">Business Name</label>
+            <input type="text" id="business-name" placeholder="Your Business Name">
+          </div>
+
+          <div class="form-group">
+            <label for="business-type">Business Type</label>
+            <select id="business-type">
+              <option value="restaurant">Restaurant / Food Service</option>
+              <option value="rental">Rental Service</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submit-btn">Log In</button>
+      </form>
+
+      <a class="forgot-link" onclick="handleForgot()">Forgot password?</a>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-client.js?v=4"></script>
+  <script src="js/cc.js?v=4"></script>
+  <script src="js/auth.js?v=4"></script>
+  <script>
+    let currentTab = 'login';
+
+    // If already logged in, redirect
+    (function() {
+      var token = CC.getToken();
+      if (token) window.location.href = 'index.html';
+    })();
+
+    function showTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tabs button').forEach((btn, i) => {
+        btn.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup'));
+      });
+      document.getElementById('signup-fields').style.display = tab === 'signup' ? 'block' : 'none';
+      document.getElementById('submit-btn').textContent = tab === 'login' ? 'Log In' : 'Create Account';
+      hideMessages();
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('success-msg').style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+      const el = document.getElementById('success-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('error-msg').style.display = 'none';
+    }
+
+    function hideMessages() {
+      document.getElementById('error-msg').style.display = 'none';
+      document.getElementById('success-msg').style.display = 'none';
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      hideMessages();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        if (currentTab === 'signup') {
+          const name = document.getElementById('business-name').value.trim();
+          const type = document.getElementById('business-type').value;
+          if (!name) { showError('Business name is required'); btn.disabled = false; return; }
+          await signup(email, password, name, type);
+          showSuccess('Account created! Check your email to confirm, then log in.');
+          showTab('login');
+        } else {
+          await login(email, password);
+          window.location.href = 'index.html';
+        }
+      } catch (err) {
+        showError(err.message);
+      }
+      btn.disabled = false;
+    }
+
+    async function handleForgot() {
+      const email = document.getElementById('email').value.trim();
+      if (!email) { showError('Enter your email first'); return; }
+      try {
+        await resetPassword(email);
+        showSuccess('Password reset link sent to your email.');
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+  </script>
+</body>
+</html>
