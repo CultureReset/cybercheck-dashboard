@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2 id="sidebar-biz-name">My Business</h2>
+        <div class="biz-type" id="sidebar-biz-type"></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <div class="nav-item active" data-page="overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Overview</span>
+        </div>
+        <div class="nav-item" data-page="profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Business Profile</span>
+        </div>
+        <div class="nav-item" data-page="media">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span>Media Library</span>
+        </div>
+        <div class="nav-item" data-page="pages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Pages</span>
+        </div>
+        <div class="nav-item" data-page="staff">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <span>Staff / Team</span>
+        </div>
+
+        <!-- Restaurant only -->
+        <div class="nav-section-label" data-biz-type="restaurant">Restaurant</div>
+        <div class="nav-item" data-page="menu" data-biz-type="restaurant">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          <span>Menu</span>
+        </div>
+        <div class="nav-item" data-page="specials" data-biz-type="restaurant">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Specials</span>
+        </div>
+
+        <!-- Rental only -->
+        <div class="nav-section-label" data-biz-type="rental">Rentals</div>
+        <div class="nav-item" data-page="inventory" data-biz-type="rental">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          <span>Inventory</span>
+        </div>
+        <div class="nav-item" data-page="availability" data-biz-type="rental">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Availability</span>
+        </div>
+        <div class="nav-item" data-page="addons" data-biz-type="rental">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <span>Add-ons & Policies</span>
+        </div>
+        <div class="nav-item" data-page="locations" data-biz-type="rental">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>Locations</span>
+        </div>
+
+        <!-- Settings -->
+        <div class="nav-section-label">Settings</div>
+        <div class="nav-item" data-page="theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <span>Theme & Design</span>
+        </div>
+        <div class="nav-item" data-page="connections">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          <span>Connections</span>
+        </div>
+        <div class="nav-item" data-page="site-editor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Site Editor</span>
+        </div>
+        <div class="nav-item" data-page="publish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+          <span>Publish</span>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger" onclick="toggleSidebar()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="topbar-title" id="topbar-title">Overview</div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn-view-site" onclick="previewSite()">View Site</button>
+          <button class="btn-logout" onclick="logout()">Log Out</button>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- OVERVIEW -->
+        <div class="page-section active" id="page-overview">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-label">Site Status</div><div class="stat-value" id="stat-status">Draft</div></div>
+            <div class="stat-card"><div class="stat-label">Media Files</div><div class="stat-value" id="stat-media">0</div></div>
+            <div class="stat-card"><div class="stat-label" id="stat-items-label">Items</div><div class="stat-value" id="stat-items">0</div></div>
+            <div class="stat-card"><div class="stat-label">Pages</div><div class="stat-value" id="stat-pages">0</div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Quick Actions</h3></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="navigateTo('profile')">Edit Profile</button>
+              <button class="btn btn-outline" onclick="navigateTo('media')">Upload Media</button>
+              <button class="btn btn-outline" onclick="navigateTo('connections')">Connect Payments</button>
+              <button class="btn btn-success" onclick="navigateTo('publish')">Publish Site</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BUSINESS PROFILE -->
+        <div class="page-section" id="page-profile">
+          <div class="card">
+            <div class="card-header"><h3>Business Information</h3></div>
+            <div class="form-row">
+              <div class="form-group"><label>Business Name</label><input type="text" id="prof-name"></div>
+              <div class="form-group"><label>Phone</label><input type="tel" id="prof-phone"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Email</label><input type="email" id="prof-email"></div>
+              <div class="form-group"><label>Website</label><input type="url" id="prof-website" placeholder="https://"></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea id="prof-description" rows="3"></textarea></div>
+            <div class="form-group">
+              <label>Logo</label>
+              <div style="display:flex;align-items:center;gap:16px;">
+                <img id="prof-logo-preview" src="" style="width:64px;height:64px;border-radius:8px;background:var(--card-border);object-fit:cover;display:none;">
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('prof-logo-input').click()">Upload Logo</button>
+                <input type="file" id="prof-logo-input" accept="image/*" style="display:none" onchange="uploadLogo(this)">
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Address</h3></div>
+            <div class="form-group"><label>Street Address</label><input type="text" id="prof-address"></div>
+            <div class="form-row">
+              <div class="form-group"><label>City</label><input type="text" id="prof-city"></div>
+              <div class="form-group"><label>State</label><input type="text" id="prof-state"></div>
+            </div>
+            <div class="form-group" style="max-width:200px;"><label>ZIP</label><input type="text" id="prof-zip"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Business Hours</h3></div>
+            <div id="hours-editor"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Social Links</h3></div>
+            <div class="form-row">
+              <div class="form-group"><label>Facebook</label><input type="url" id="prof-social-facebook" placeholder="https://facebook.com/..."></div>
+              <div class="form-group"><label>Instagram</label><input type="url" id="prof-social-instagram" placeholder="https://instagram.com/..."></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>TikTok</label><input type="url" id="prof-social-tiktok" placeholder="https://tiktok.com/@..."></div>
+              <div class="form-group"><label>Yelp</label><input type="url" id="prof-social-yelp" placeholder="https://yelp.com/biz/..."></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Google Business</label><input type="url" id="prof-social-google" placeholder="https://g.page/..."></div>
+              <div class="form-group"><label>Twitter / X</label><input type="url" id="prof-social-twitter" placeholder="https://x.com/..."></div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+        </div>
+
+        <!-- MEDIA LIBRARY -->
+        <div class="page-section" id="page-media">
+          <div class="card">
+            <div class="card-header">
+              <h3>Media Library</h3>
+              <button class="btn btn-primary btn-sm" onclick="document.getElementById('media-upload-input').click()">Upload Files</button>
+            </div>
+            <input type="file" id="media-upload-input" multiple accept="image/*,video/*,.pdf" style="display:none" onchange="uploadMedia(this.files)">
+            <div class="upload-zone" id="media-drop-zone">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p>Drag & drop files here or click to upload</p>
+            </div>
+            <div class="grid-4" id="media-grid" style="margin-top:20px;"></div>
+          </div>
+        </div>
+
+        <!-- PAGES -->
+        <div class="page-section" id="page-pages">
+          <div class="card">
+            <div class="card-header"><h3>Pages</h3><button class="btn btn-primary btn-sm" onclick="openPageModal()">Add Page</button></div>
+            <div id="pages-list"></div>
+            <div class="empty-state" id="pages-empty"><h3>No pages yet</h3><p>Add pages like About, Contact, FAQ to your site.</p><button class="btn btn-primary" onclick="openPageModal()">Add First Page</button></div>
+          </div>
+        </div>
+
+        <!-- STAFF -->
+        <div class="page-section" id="page-staff">
+          <div class="card">
+            <div class="card-header"><h3>Team Members</h3><button class="btn btn-primary btn-sm" onclick="openStaffModal()">Add Member</button></div>
+            <div class="grid-3" id="staff-grid"></div>
+            <div class="empty-state" id="staff-empty"><h3>No team members</h3><p>Add your staff with photos and bios.</p><button class="btn btn-primary" onclick="openStaffModal()">Add First Member</button></div>
+          </div>
+        </div>
+
+        <!-- MENU (Restaurant) -->
+        <div class="page-section" id="page-menu">
+          <div class="card">
+            <div class="card-header">
+              <h3>Menu</h3>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-sm" onclick="openCategoryModal()">Add Category</button>
+                <button class="btn btn-primary btn-sm" onclick="openMenuItemModal()">Add Item</button>
+              </div>
+            </div>
+            <div id="menu-categories-list"></div>
+            <div class="empty-state" id="menu-empty"><h3>No menu items</h3><p>Start by creating categories then add items.</p><button class="btn btn-primary" onclick="openCategoryModal()">Add First Category</button></div>
+          </div>
+        </div>
+
+        <!-- SPECIALS (Restaurant) -->
+        <div class="page-section" id="page-specials">
+          <div class="card">
+            <div class="card-header"><h3>Daily Specials</h3><button class="btn btn-primary btn-sm" onclick="openSpecialModal()">Add Special</button></div>
+            <div id="specials-list"></div>
+            <div class="empty-state" id="specials-empty"><h3>No specials</h3><p>Add happy hours, daily specials, or limited-time offers.</p><button class="btn btn-primary" onclick="openSpecialModal()">Add First Special</button></div>
+          </div>
+        </div>
+
+        <!-- INVENTORY (Rental) -->
+        <div class="page-section" id="page-inventory">
+          <div class="card">
+            <div class="card-header"><h3>Rental Inventory</h3><button class="btn btn-primary btn-sm" onclick="openInventoryModal()">Add Item</button></div>
+            <div class="grid-3" id="inventory-grid"></div>
+            <div class="empty-state" id="inventory-empty"><h3>No inventory items</h3><p>Add items available for rent with pricing and photos.</p><button class="btn btn-primary" onclick="openInventoryModal()">Add First Item</button></div>
+          </div>
+        </div>
+
+        <!-- AVAILABILITY (Rental) -->
+        <div class="page-section" id="page-availability">
+          <div class="card">
+            <div class="card-header">
+              <h3>Availability Calendar</h3>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <select id="avail-item-select" style="padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);color:var(--text);font-size:13px;" onchange="loadAvailability()"><option value="">Select item...</option></select>
+                <button class="btn btn-outline btn-sm" onclick="prevMonth()">&lt;</button>
+                <span id="avail-month-label" style="min-width:140px;text-align:center;font-weight:600;"></span>
+                <button class="btn btn-outline btn-sm" onclick="nextMonth()">&gt;</button>
+              </div>
+            </div>
+            <div class="calendar-grid" id="availability-calendar"></div>
+            <div style="display:flex;gap:16px;margin-top:16px;">
+              <span class="badge badge-success">Available</span>
+              <span class="badge badge-danger">Booked</span>
+              <span class="badge badge-info">Blocked</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADD-ONS & POLICIES (Rental) -->
+        <div class="page-section" id="page-addons">
+          <div class="card">
+            <div class="card-header"><h3>Add-ons</h3><button class="btn btn-primary btn-sm" onclick="openAddonModal()">Add Add-on</button></div>
+            <div id="addons-list"></div>
+            <div class="empty-state" id="addons-empty"><h3>No add-ons</h3><p>Offer extras like insurance, delivery, or accessories.</p><button class="btn btn-primary" onclick="openAddonModal()">Add First Add-on</button></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Rental Policies</h3></div>
+            <div class="form-row">
+              <div class="form-group"><label>Deposit (%)</label><input type="number" id="policy-deposit" min="0" max="100"></div>
+              <div class="form-group"><label>Cancellation Window (hours)</label><input type="number" id="policy-cancel-hours" min="0"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Cancellation Fee ($)</label><input type="number" id="policy-cancel-fee" min="0" step="0.01"></div>
+              <div class="form-group"><label>Late Fee ($/hour)</label><input type="number" id="policy-late-fee" min="0" step="0.01"></div>
+            </div>
+            <div class="form-group"><label>Rental Agreement Text</label><textarea id="policy-agreement" rows="6" placeholder="Enter your rental agreement terms..."></textarea></div>
+            <button class="btn btn-primary" onclick="savePolicies()">Save Policies</button>
+          </div>
+        </div>
+
+        <!-- LOCATIONS (Rental) -->
+        <div class="page-section" id="page-locations">
+          <div class="card">
+            <div class="card-header"><h3>Pickup / Dropoff Locations</h3><button class="btn btn-primary btn-sm" onclick="openLocationModal()">Add Location</button></div>
+            <div id="locations-list"></div>
+            <div class="empty-state" id="locations-empty"><h3>No locations</h3><p>Add pickup and dropoff locations for your rentals.</p><button class="btn btn-primary" onclick="openLocationModal()">Add First Location</button></div>
+          </div>
+        </div>
+
+        <!-- THEME & DESIGN -->
+        <div class="page-section" id="page-theme">
+          <div class="card">
+            <div class="card-header"><h3>Colors</h3></div>
+            <div class="color-row"><label>Primary</label><input type="color" id="theme-primary" value="#3b82f6"><input type="text" id="theme-primary-hex" value="#3b82f6" style="width:100px;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);color:var(--text);font-size:13px;"></div>
+            <div class="color-row"><label>Secondary</label><input type="color" id="theme-secondary" value="#10b981"><input type="text" id="theme-secondary-hex" value="#10b981" style="width:100px;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);color:var(--text);font-size:13px;"></div>
+            <div class="color-row"><label>Background</label><input type="color" id="theme-bg" value="#ffffff"><input type="text" id="theme-bg-hex" value="#ffffff" style="width:100px;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);color:var(--text);font-size:13px;"></div>
+            <div class="color-row"><label>Text</label><input type="color" id="theme-text" value="#1e293b"><input type="text" id="theme-text-hex" value="#1e293b" style="width:100px;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);color:var(--text);font-size:13px;"></div>
+            <div class="color-row"><label>Accent</label><input type="color" id="theme-accent" value="#f59e0b"><input type="text" id="theme-accent-hex" value="#f59e0b" style="width:100px;padding:8px;background:var(--bg);border:1px solid var(--card-border);border-radius:var(--radius);color:var(--text);font-size:13px;"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Typography</h3></div>
+            <div class="form-row">
+              <div class="form-group"><label>Heading Font</label><select id="theme-heading-font"><option>Inter</option><option>Playfair Display</option><option>Montserrat</option><option>Poppins</option><option>Raleway</option><option>Roboto</option><option>Lora</option><option>Oswald</option></select></div>
+              <div class="form-group"><label>Body Font</label><select id="theme-body-font"><option>Inter</option><option>Open Sans</option><option>Roboto</option><option>Lato</option><option>Source Sans Pro</option><option>Nunito</option></select></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Layout</h3></div>
+            <div class="form-group"><label>Style</label><select id="theme-layout"><option value="modern">Modern</option><option value="classic">Classic</option><option value="minimal">Minimal</option><option value="bold">Bold</option></select></div>
+          </div>
+          <button class="btn btn-primary" onclick="saveTheme()">Save Theme</button>
+        </div>
+
+        <!-- CONNECTIONS -->
+        <div class="page-section" id="page-connections">
+          <div class="card">
+            <div class="card-header"><h3>Payment Providers</h3></div>
+            <div class="oauth-grid" id="payment-connections"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Google Services</h3></div>
+            <div class="oauth-grid" id="google-connections"></div>
+          </div>
+        </div>
+
+        <!-- SITE EDITOR -->
+        <div class="page-section" id="page-site-editor">
+          <div class="card" style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-sm" onclick="addSection()">Add Section</button>
+                <button class="btn btn-outline btn-sm" onclick="toggleCssEditor()">Edit CSS</button>
+                <button class="btn btn-outline btn-sm" onclick="insertDataToken()">Insert Data</button>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-sm" onclick="setPreviewMode('desktop')">Desktop</button>
+                <button class="btn btn-outline btn-sm" onclick="setPreviewMode('mobile')">Mobile</button>
+                <button class="btn btn-primary btn-sm" onclick="refreshPreview()">Refresh Preview</button>
+              </div>
+            </div>
+          </div>
+          <div class="editor-layout">
+            <div class="editor-panel">
+              <div class="section-list" id="editor-sections"></div>
+              <textarea class="editor-textarea" id="editor-code" placeholder="Select a section to edit its HTML..." oninput="onEditorInput()"></textarea>
+            </div>
+            <div class="editor-panel">
+              <iframe class="preview-frame" id="editor-preview"></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- PUBLISH -->
+        <div class="page-section" id="page-publish">
+          <div class="card">
+            <div class="card-header"><h3>Site Status</h3></div>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+              <span id="publish-status-badge" class="badge badge-warning">Draft</span>
+              <span id="publish-last-updated" style="font-size:13px;color:var(--text-muted);"></span>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button class="btn btn-outline" onclick="previewSite()">Preview</button>
+              <button class="btn btn-success" onclick="publishSite()">Publish</button>
+              <button class="btn btn-danger btn-sm" onclick="unpublishSite()" id="btn-unpublish" style="display:none;">Unpublish</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Revision History</h3></div>
+            <div id="revisions-list"></div>
+            <div class="empty-state" id="revisions-empty"><h3>No revisions</h3><p>Revisions are saved each time you publish.</p></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- Page Modal -->
+  <div class="modal-overlay" id="modal-page"><div class="modal">
+    <div class="modal-header"><h3 id="page-modal-title">Add Page</h3><button class="modal-close" onclick="closeModal('modal-page')">&times;</button></div>
+    <div class="form-group"><label>Page Title</label><input type="text" id="page-form-title" placeholder="About Us"></div>
+    <div class="form-group"><label>URL Slug</label><input type="text" id="page-form-slug" placeholder="about-us"></div>
+    <div class="form-group"><label>Content</label><textarea id="page-form-content" rows="8" placeholder="Page content..."></textarea></div>
+    <div class="form-row"><div class="form-group"><label>SEO Title</label><input type="text" id="page-form-seo-title"></div><div class="form-group"><label>SEO Description</label><input type="text" id="page-form-seo-desc"></div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-page')">Cancel</button><button class="btn btn-primary" onclick="savePage()">Save Page</button></div>
+    <input type="hidden" id="page-form-id">
+  </div></div>
+
+  <!-- Staff Modal -->
+  <div class="modal-overlay" id="modal-staff"><div class="modal">
+    <div class="modal-header"><h3 id="staff-modal-title">Add Team Member</h3><button class="modal-close" onclick="closeModal('modal-staff')">&times;</button></div>
+    <div class="form-group"><label>Name</label><input type="text" id="staff-form-name"></div>
+    <div class="form-group"><label>Role / Title</label><input type="text" id="staff-form-role" placeholder="Head Chef"></div>
+    <div class="form-group"><label>Bio</label><textarea id="staff-form-bio" rows="3"></textarea></div>
+    <div class="form-group"><label>Photo</label><input type="file" id="staff-form-photo" accept="image/*"></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-staff')">Cancel</button><button class="btn btn-primary" onclick="saveStaff()">Save</button></div>
+    <input type="hidden" id="staff-form-id">
+  </div></div>
+
+  <!-- Category Modal -->
+  <div class="modal-overlay" id="modal-category"><div class="modal">
+    <div class="modal-header"><h3>Add Menu Category</h3><button class="modal-close" onclick="closeModal('modal-category')">&times;</button></div>
+    <div class="form-group"><label>Category Name</label><input type="text" id="cat-form-name" placeholder="Appetizers"></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-category')">Cancel</button><button class="btn btn-primary" onclick="saveCategory()">Save</button></div>
+    <input type="hidden" id="cat-form-id">
+  </div></div>
+
+  <!-- Menu Item Modal -->
+  <div class="modal-overlay" id="modal-menu-item"><div class="modal">
+    <div class="modal-header"><h3 id="menu-item-modal-title">Add Menu Item</h3><button class="modal-close" onclick="closeModal('modal-menu-item')">&times;</button></div>
+    <div class="form-group"><label>Category</label><select id="mi-form-category"></select></div>
+    <div class="form-row"><div class="form-group"><label>Name</label><input type="text" id="mi-form-name" placeholder="Grilled Salmon"></div><div class="form-group"><label>Price ($)</label><input type="number" id="mi-form-price" min="0" step="0.01"></div></div>
+    <div class="form-group"><label>Description</label><textarea id="mi-form-desc" rows="2"></textarea></div>
+    <div class="form-group"><label>Photo</label><input type="file" id="mi-form-photo" accept="image/*"></div>
+    <div class="form-group"><label>Tags (comma-separated)</label><input type="text" id="mi-form-tags" placeholder="vegan, gluten-free, spicy"></div>
+    <div class="form-group"><label>Modifiers (one per line: Name | Price)</label><textarea id="mi-form-modifiers" rows="3" placeholder="Add Bacon | 2.00&#10;Extra Cheese | 1.50"></textarea></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-menu-item')">Cancel</button><button class="btn btn-primary" onclick="saveMenuItem()">Save Item</button></div>
+    <input type="hidden" id="mi-form-id">
+  </div></div>
+
+  <!-- Special Modal -->
+  <div class="modal-overlay" id="modal-special"><div class="modal">
+    <div class="modal-header"><h3 id="special-modal-title">Add Special</h3><button class="modal-close" onclick="closeModal('modal-special')">&times;</button></div>
+    <div class="form-group"><label>Title</label><input type="text" id="spec-form-title" placeholder="Happy Hour"></div>
+    <div class="form-group"><label>Description</label><textarea id="spec-form-desc" rows="2"></textarea></div>
+    <div class="form-group"><label>Days</label><div id="spec-form-days" style="display:flex;gap:8px;flex-wrap:wrap;"></div></div>
+    <div class="form-row"><div class="form-group"><label>Start Time</label><input type="time" id="spec-form-start"></div><div class="form-group"><label>End Time</label><input type="time" id="spec-form-end"></div></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-special')">Cancel</button><button class="btn btn-primary" onclick="saveSpecial()">Save</button></div>
+    <input type="hidden" id="spec-form-id">
+  </div></div>
+
+  <!-- Inventory Modal -->
+  <div class="modal-overlay" id="modal-inventory"><div class="modal">
+    <div class="modal-header"><h3 id="inv-modal-title">Add Inventory Item</h3><button class="modal-close" onclick="closeModal('modal-inventory')">&times;</button></div>
+    <div class="form-group"><label>Name</label><input type="text" id="inv-form-name" placeholder="Kayak - Single"></div>
+    <div class="form-group"><label>Description</label><textarea id="inv-form-desc" rows="2"></textarea></div>
+    <div class="form-row"><div class="form-group"><label>Hourly Rate ($)</label><input type="number" id="inv-form-hourly" min="0" step="0.01"></div><div class="form-group"><label>Daily Rate ($)</label><input type="number" id="inv-form-daily" min="0" step="0.01"></div></div>
+    <div class="form-row"><div class="form-group"><label>Weekly Rate ($)</label><input type="number" id="inv-form-weekly" min="0" step="0.01"></div><div class="form-group"><label>Deposit ($)</label><input type="number" id="inv-form-deposit" min="0" step="0.01"></div></div>
+    <div class="form-group"><label>Quantity Available</label><input type="number" id="inv-form-qty" min="1" value="1"></div>
+    <div class="form-group"><label>Photos</label><input type="file" id="inv-form-photos" accept="image/*" multiple></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-inventory')">Cancel</button><button class="btn btn-primary" onclick="saveInventoryItem()">Save Item</button></div>
+    <input type="hidden" id="inv-form-id">
+  </div></div>
+
+  <!-- Addon Modal -->
+  <div class="modal-overlay" id="modal-addon"><div class="modal">
+    <div class="modal-header"><h3>Add Add-on</h3><button class="modal-close" onclick="closeModal('modal-addon')">&times;</button></div>
+    <div class="form-group"><label>Name</label><input type="text" id="addon-form-name" placeholder="Delivery"></div>
+    <div class="form-group"><label>Description</label><textarea id="addon-form-desc" rows="2"></textarea></div>
+    <div class="form-group"><label>Price ($)</label><input type="number" id="addon-form-price" min="0" step="0.01"></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-addon')">Cancel</button><button class="btn btn-primary" onclick="saveAddon()">Save</button></div>
+    <input type="hidden" id="addon-form-id">
+  </div></div>
+
+  <!-- Location Modal -->
+  <div class="modal-overlay" id="modal-location"><div class="modal">
+    <div class="modal-header"><h3>Add Location</h3><button class="modal-close" onclick="closeModal('modal-location')">&times;</button></div>
+    <div class="form-group"><label>Location Name</label><input type="text" id="loc-form-name" placeholder="Main Office"></div>
+    <div class="form-group"><label>Address</label><input type="text" id="loc-form-address"></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-location')">Cancel</button><button class="btn btn-primary" onclick="saveLocation()">Save</button></div>
+    <input type="hidden" id="loc-form-id">
+  </div></div>
+
+  <!-- Media Detail Modal -->
+  <div class="modal-overlay" id="modal-media-detail"><div class="modal">
+    <div class="modal-header"><h3>Media Details</h3><button class="modal-close" onclick="closeModal('modal-media-detail')">&times;</button></div>
+    <img id="media-detail-img" src="" style="width:100%;border-radius:8px;margin-bottom:16px;">
+    <div class="form-group"><label>File URL (click to copy)</label><input type="text" id="media-detail-url" readonly onclick="this.select();navigator.clipboard.writeText(this.value);toast('URL copied!')"></div>
+    <p style="font-size:12px;color:var(--text-muted);" id="media-detail-info"></p>
+    <div class="modal-footer"><button class="btn btn-danger btn-sm" onclick="deleteMedia()">Delete</button><button class="btn btn-outline" onclick="closeModal('modal-media-detail')">Close</button></div>
+    <input type="hidden" id="media-detail-id">
+  </div></div>
+
+  <!-- Insert Data Token Modal -->
+  <div class="modal-overlay" id="modal-insert-data"><div class="modal">
+    <div class="modal-header"><h3>Insert Data Token</h3><button class="modal-close" onclick="closeModal('modal-insert-data')">&times;</button></div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Click a token to insert it into your HTML. Tokens are replaced with real data when published.</p>
+    <div id="data-tokens-list"></div>
+  </div></div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/media.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/specials.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/availability.js"></script>
+  <script src="js/addons.js"></script>
+  <script src="js/locations.js"></script>
+  <script src="js/pages.js"></script>
+  <script src="js/staff.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/oauth.js"></script>
+  <script src="js/site-editor.js"></script>
+  <script src="js/publish.js"></script>
+  <script>
+    // DEMO MODE: set to true to preview UI without Supabase
+    const DEMO_MODE = true;
+
+    (async () => {
+      let biz;
+
+      if (DEMO_MODE) {
+        biz = { id: 'demo', type: 'restaurant', name: 'Demo Restaurant', status: 'draft' };
+        _business = biz;
+      } else {
+        const session = await requireAuth();
+        if (!session) return;
+        biz = await getBusiness();
+        if (!biz) { toast('No business found', 'error'); return; }
+      }
+
+      document.getElementById('sidebar-biz-name').textContent = biz.name || 'My Business';
+      document.getElementById('sidebar-biz-type').textContent = biz.type === 'restaurant' ? 'Restaurant' : 'Rental Service';
+
+      setupNavForType(biz.type);
+      document.getElementById('stat-items-label').textContent = biz.type === 'restaurant' ? 'Menu Items' : 'Inventory Items';
+
+      initRouter();
+
+      if (DEMO_MODE) {
+        // In demo mode, call all load functions with in-memory data
+        loadProfile();
+        loadMedia();
+        loadPages();
+        loadStaff();
+        loadTheme();
+        loadConnections();
+        loadSiteEditor();
+        loadPublishStatus();
+        if (biz.type === 'restaurant') { loadMenu(); loadSpecials(); }
+        else { loadInventory(); loadAvailabilityItems(); loadAddons(); loadPolicies(); loadLocations(); }
+        // Update overview stats from in-memory data
+        document.getElementById('stat-status').textContent = 'Draft';
+        document.getElementById('stat-media').textContent = typeof _mediaItems !== 'undefined' ? _mediaItems.length : 0;
+        document.getElementById('stat-pages').textContent = typeof _pages !== 'undefined' ? _pages.length : 0;
+        if (biz.type === 'restaurant') {
+          document.getElementById('stat-items').textContent = typeof _menuItems !== 'undefined' ? _menuItems.length : 0;
+        } else {
+          document.getElementById('stat-items').textContent = typeof _inventoryItems !== 'undefined' ? _inventoryItems.length : 0;
+        }
+      } else {
+        loadProfile();
+        loadMedia();
+        loadPages();
+        loadStaff();
+        loadTheme();
+        loadConnections();
+        loadSiteEditor();
+        loadPublishStatus();
+        if (biz.type === 'restaurant') { loadMenu(); loadSpecials(); }
+        else { loadInventory(); loadAvailabilityItems(); loadAddons(); loadPolicies(); loadLocations(); }
+        loadOverviewStats();
+      }
+    })();
+
+    async function loadOverviewStats() {
+      const biz = await getBusiness();
+      document.getElementById('stat-status').textContent = biz.status === 'published' ? 'Live' : 'Draft';
+      const { count: mc } = await supabase.from('media').select('*', { count: 'exact', head: true }).eq('business_id', biz.id);
+      document.getElementById('stat-media').textContent = mc || 0;
+      const { count: pc } = await supabase.from('pages').select('*', { count: 'exact', head: true }).eq('business_id', biz.id);
+      document.getElementById('stat-pages').textContent = pc || 0;
+      const tbl = biz.type === 'restaurant' ? 'menu_items' : 'inventory_items';
+      const { count: ic } = await supabase.from(tbl).select('*', { count: 'exact', head: true }).eq('business_id', biz.id);
+      document.getElementById('stat-items').textContent = ic || 0;
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+      o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+    });
+  </script>
+</body>
+</html>
