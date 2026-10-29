@@ -49,14 +49,14 @@ from profile_os.profiles p
 join profile_os.organizations o on o.id = p.organization_id and o.slug = 'cybercheck-profile-os-demo'
 cross join lateral (values
   ('tide-table-demo', 'Call', 'call', 'tel:+12515550100', 10),
-  ('tide-table-demo', 'Directions', 'directions', 'https://maps.google.com', 20),
-  ('tide-table-demo', 'Reserve', 'booking', '/tide-table-demo/book', 30),
-  ('wave-room-demo', 'Tip', 'tip', '/wave-room-demo/tip', 10),
-  ('wave-room-demo', 'Request a song', 'live', '/wave-room-demo/live', 20),
-  ('wave-room-demo', 'Book', 'booking', '/wave-room-demo/book', 30),
+  ('tide-table-demo', 'Directions', 'directions', 'https://maps.google.com/?q=Orange+Beach+AL', 20),
+  ('tide-table-demo', 'Reserve', 'booking', 'https://example.com/reserve', 30),
+  ('wave-room-demo', 'Tip', 'tip', 'https://example.com/tip', 10),
+  ('wave-room-demo', 'Request a song', 'live', '/wave-room-demo#block-live', 20),
+  ('wave-room-demo', 'Book', 'booking', 'https://example.com/book', 30),
   ('coast-key-demo', 'Call', 'call', 'tel:+12515550101', 10),
-  ('coast-key-demo', 'Get valuation', 'form', '/coast-key-demo/contact', 20),
-  ('coast-key-demo', 'Save contact', 'vcard', '/coast-key-demo/contact.vcf', 30)
+  ('coast-key-demo', 'Get valuation', 'form', '/coast-key-demo#block-valuation', 20),
+  ('coast-key-demo', 'Save contact', 'vcard', 'mailto:info@coastkey.example', 30)
 ) as a(profile_slug, label, action_type, href, sort_order)
 where p.slug = a.profile_slug;
 
@@ -66,6 +66,7 @@ from profile_os.profiles p
 join profile_os.organizations o on o.id = p.organization_id and o.slug = 'cybercheck-profile-os-demo'
 cross join lateral (values
   ('tide-table-demo', 'Lunch', 'lunch', 10),
+  ('tide-table-demo', 'Dinner', 'dinner', 20),
   ('wave-room-demo', 'Fan favorites', 'fan-favorites', 10),
   ('coast-key-demo', 'Featured homes', 'featured-homes', 10)
 ) as c(profile_slug, name, slug, sort_order)
@@ -78,6 +79,7 @@ join profile_os.organizations o on o.id = p.organization_id and o.slug = 'cyberc
 join profile_os.catalog_categories c on c.profile_id = p.id
 cross join lateral (values
   ('tide-table-demo', 'lunch', 'menu_item', 'Blackened Gulf Shrimp', 'blackened-gulf-shrimp', 'Lunch plate with seasoned fries.', 15.99),
+  ('tide-table-demo', 'dinner', 'menu_item', 'Grilled Red Snapper', 'grilled-red-snapper', 'Fresh catch with seasonal vegetables.', 28.00),
   ('wave-room-demo', 'fan-favorites', 'song', 'Coastal Highway', 'coastal-highway', 'Fan-request favorite.', null),
   ('coast-key-demo', 'featured-homes', 'property', 'Bayfront Retreat', 'bayfront-retreat', 'Three-bedroom waterfront home.', 749000.00)
 ) as d(profile_slug, category_slug, entry_type, title, slug, summary, price_from)
@@ -93,3 +95,20 @@ cross join lateral (values
   ('coast-key-demo', 'Bayfront Open House', 'Walk-through and neighborhood tour.', 'open_house')
 ) as d(profile_slug, title, description, event_kind)
 where p.slug = d.profile_slug;
+
+-- Add real occurrence dates so events render with dates
+insert into profile_os.event_occurrences (organization_id, profile_id, event_id, starts_at, ends_at)
+select e.organization_id, e.profile_id, e.id,
+  case p.slug
+    when 'tide-table-demo' then now() + interval '2 days'
+    when 'wave-room-demo' then now() + interval '5 days'
+    else now() + interval '7 days'
+  end,
+  case p.slug
+    when 'tide-table-demo' then now() + interval '2 days' + interval '3 hours'
+    when 'wave-room-demo' then now() + interval '5 days' + interval '2 hours'
+    else now() + interval '7 days' + interval '1 hour'
+  end
+from profile_os.events e
+join profile_os.profiles p on p.id = e.profile_id
+where p.slug in ('tide-table-demo', 'wave-room-demo', 'coast-key-demo');
