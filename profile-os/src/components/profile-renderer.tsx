@@ -34,6 +34,37 @@ function ShareButton({ title, url }: { title: string; url: string }) {
   }
   return <button aria-label="Share profile" onClick={share}>{copied ? "Copied" : "↗"}</button>;
 }
+function BookingBlock() {
+  return <div className="module-ready"><span>◫</span><p>Choose a service and request a time. Availability and confirmation will appear here.</p><button type="button">Request a booking</button></div>;
+}
+function ReviewsBlock() {
+  return <div className="module-ready"><span>★</span><p>Guest reviews and ratings will show here once they are submitted and approved.</p></div>;
+}
+function GalleryBlock() {
+  return <div className="module-ready"><span>▧</span><p>Photos and videos from the gallery will appear in a grid here.</p></div>;
+}
+function SmsBlock() {
+  const [joined, setJoined] = useState(false);
+  return <div className="module-ready"><span>⌁</span><p>Get updates, specials, and alerts by text.</p>{!joined ? <form onSubmit={(e) => { e.preventDefault(); setJoined(true); }}><input type="tel" placeholder="Mobile number" required /><button type="submit">Join text club</button></form> : <p>You're on the list. Watch for a confirmation text.</p>}</div>;
+}
+function AnalyticsBlock() {
+  return <div className="module-ready"><span>◱</span><p>Page views, scans, and clicks are tracked. Detailed analytics are available in the studio.</p></div>;
+}
+function TipsBlock() {
+  return <div className="module-ready"><span>♥</span><p>Leave a tip for the team.</p><button type="button">Send a tip</button></div>;
+}
+function ContentWallBlock() {
+  return <div className="module-ready"><span>≡</span><p>Posts, updates, and exclusive content will appear here.</p></div>;
+}
+function LoyaltyBlock() {
+  return <div className="module-ready"><span>◎</span><p>Earn points and rewards. Join the loyalty program to start collecting.</p><button type="button">Join rewards</button></div>;
+}
+function AiMediaBlock() {
+  return <div className="module-ready"><span>✧</span><p>AI-generated covers, promos, and photos will be available here.</p></div>;
+}
+function TeamBlock() {
+  return <div className="module-ready"><span>◉</span><p>Team members and staff roles will be listed here.</p></div>;
+}
 const blockComponents: Record<string, (block: Block, slug: string) => React.ReactNode> = {
   menu: (block) => <Items items={block.data?.entries ?? []} compact />,
   catalog: (block) => <Items items={block.data?.entries ?? []} />,
@@ -42,8 +73,16 @@ const blockComponents: Record<string, (block: Block, slug: string) => React.Reac
   live_session: (block) => <LiveBlock block={block} />,
   lead_forms: (block, slug) => <PublicLeadForm slug={slug} blockKey={block.block_key} config={block.config} />,
   specials: (block) => <Items items={block.data?.entries ?? []} compact />,
-  reviews: (block) => <div className="module-ready"><span>★</span><p>Reviews will appear here once guests leave them.</p></div>,
-  gallery: (block) => <div className="module-ready"><span>▧</span><p>Gallery photos will appear here.</p></div>
+  booking: () => <BookingBlock />,
+  reviews: () => <ReviewsBlock />,
+  gallery: () => <GalleryBlock />,
+  sms_opt_in: () => <SmsBlock />,
+  analytics: () => <AnalyticsBlock />,
+  tips: () => <TipsBlock />,
+  content_wall: () => <ContentWallBlock />,
+  loyalty: () => <LoyaltyBlock />,
+  ai_media: () => <AiMediaBlock />,
+  team: () => <TeamBlock />
 };
 
 export function ProfileRenderer({ profile, actions, blocks }: Props) {
