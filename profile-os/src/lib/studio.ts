@@ -15,7 +15,7 @@ export async function studioPayload(userId: string) {
   const { data: memberships } = await db.schema("profile_os").from("organization_members").select("organization_id, role").eq("user_id", userId);
   const orgIds = (memberships ?? []).map((member: Member) => member.organization_id);
   if (!orgIds.length) return { profiles: [], modules: Object.values(moduleRegistry) };
-  const { data: profiles } = await db.schema("profile_os").from("profiles").select("id, slug, display_name, short_description, status, is_public, organization_id, theme").in("organization_id", orgIds).order("created_at");
+  const { data: profiles } = await db.schema("profile_os").from("profiles").select("id, slug, display_name, short_description, status, is_public, organization_id, theme, recommendation_goals").in("organization_id", orgIds).order("created_at");
   const ids = (profiles ?? []).map((profile) => profile.id);
   const [{ data: installed }, { data: blocks }] = await Promise.all([
     ids.length ? db.schema("profile_os").from("profile_modules").select("profile_id,module_key,config,is_enabled").in("profile_id", ids) : Promise.resolve({ data: [] }),
