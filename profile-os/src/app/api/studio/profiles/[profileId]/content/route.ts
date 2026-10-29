@@ -22,3 +22,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
   if (kind === "shop") await db.schema("profile_os").from("products").insert({ organization_id: member.organization_id, profile_id: profileId, catalog_entry_id: entry.id, fulfillment_mode: String(body.fulfillment ?? "shipping") });
   return NextResponse.json({ id: entry.id }, { status: 201 });
 }
+export async function DELETE(request: Request, { params }: { params: Promise<{ profileId: string }> }) {
+  const userId = await authenticatedUserId(); if (!userId) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  const { profileId } = await params; if (!await memberForProfile(userId, profileId)) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  const body = await request.json(); const id = String(body.id ?? ""); const kind = String(body.kind ?? "catalog"); if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  const db = serverDb();
+  if (kind === "events") {
+    const { error } = await db.schema("profile_os").from("events").delete().eq("id", id).eq("profile_id", profileId);
+    if (error) return NextResponse.json({ error: "Could not delete" }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  }
+  const { error } = await db.schema("profile_os").from("catalog_entries").delete().eq("id", id).eq("profile_id", profileId);
+  if (error) return NextResponse.json({ error: "Could not delete" }, { status: 400 });
+  return NextResponse.json({ ok: true });
+}
