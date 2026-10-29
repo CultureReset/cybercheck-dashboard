@@ -1,28 +1,9 @@
-export const MODULE_KEYS = [
-  "quick_actions", "catalog", "menu", "specials", "events", "booking",
-  "shop", "reviews", "lead_forms", "gallery", "sms_opt_in", "analytics",
-  "live_session", "tips", "content_wall", "loyalty", "ai_media", "team"
-] as const;
-
+export const MODULE_KEYS = ["quick_actions", "catalog", "menu", "specials", "events", "booking", "shop", "reviews", "lead_forms", "gallery", "sms_opt_in", "analytics", "live_session", "tips", "content_wall", "loyalty", "ai_media", "team"] as const;
 export type ModuleKey = (typeof MODULE_KEYS)[number];
+export type ModuleDefinition = { key: ModuleKey; name: string; description: string; category: "growth" | "commerce" | "engagement" | "operations" | "content"; icon: string; accent: string; defaultBlock: string };
 
-export const moduleRegistry: Record<ModuleKey, { name: string; description: string }> = {
-  quick_actions: { name: "Quick actions", description: "Call, text, directions, booking, or custom actions." },
-  catalog: { name: "Catalog", description: "Universal cards for services, listings, products, and packages." },
-  menu: { name: "Menu", description: "Restaurant categories, menu items, dietary fields, and modifiers." },
-  specials: { name: "Specials & happy hour", description: "Time-bound pricing and promotions." },
-  events: { name: "Events", description: "Shows, open houses, recurring schedules, and RSVPs." },
-  booking: { name: "Booking", description: "Services, availability, booking requests, and source links." },
-  shop: { name: "Shop", description: "Products, variants, inventory, carts, orders, pickup, and shipping." },
-  reviews: { name: "Reviews", description: "Verified review requests, moderation, and public reviews." },
-  lead_forms: { name: "Lead forms", description: "Contact, quote, catering, valuation, and booking inquiries." },
-  gallery: { name: "Gallery", description: "Photos, videos, embeds, and captions." },
-  sms_opt_in: { name: "SMS opt-in", description: "Consent-aware text-message signup." },
-  analytics: { name: "Analytics", description: "Views, scans, clicks, submissions, and conversion events." },
-  live_session: { name: "Live session", description: "QR event rooms, requests, queues, and voting." },
-  tips: { name: "Tips", description: "Tips and payout records through Stripe Connect." },
-  content_wall: { name: "Content wall", description: "Posts, member-only content, and subscriptions." },
-  loyalty: { name: "Loyalty", description: "Points, rewards, and cross-business Trip Pass participation." },
-  ai_media: { name: "AI media", description: "Credit-metered marketing asset generation." },
-  team: { name: "Team", description: "Multiple profiles, staff roles, and shared management." }
+// Typed cache of the database module manifest. A profile's business type never decides its apps.
+export const moduleRegistry: Record<ModuleKey, ModuleDefinition> = {
+  quick_actions:{key:"quick_actions",name:"Quick actions",description:"Call, text, directions, booking, or any link.",category:"growth",icon:"↗",accent:"#38bdf8",defaultBlock:"actions"}, catalog:{key:"catalog",name:"Catalog",description:"Flexible cards for services, listings, packages, or songs.",category:"commerce",icon:"▦",accent:"#a78bfa",defaultBlock:"catalog"}, menu:{key:"menu",name:"Menu",description:"Categories, dietary details, modifiers, and prices.",category:"commerce",icon:"⌘",accent:"#f97316",defaultBlock:"menu"}, specials:{key:"specials",name:"Specials",description:"Happy hour, promos, and time-sensitive offers.",category:"growth",icon:"✦",accent:"#fb7185",defaultBlock:"specials"}, events:{key:"events",name:"Events",description:"Shows, open houses, schedules, RSVPs, and recurring events.",category:"engagement",icon:"◷",accent:"#34d399",defaultBlock:"events"}, booking:{key:"booking",name:"Booking",description:"Services, availability, request flows, and calendar links.",category:"operations",icon:"◫",accent:"#60a5fa",defaultBlock:"booking"}, shop:{key:"shop",name:"Shop",description:"Products, variants, carts, pickup, shipping, and orders.",category:"commerce",icon:"◒",accent:"#fbbf24",defaultBlock:"shop"}, reviews:{key:"reviews",name:"Reviews",description:"Request, moderate, and show social proof.",category:"growth",icon:"★",accent:"#f472b6",defaultBlock:"reviews"}, lead_forms:{key:"lead_forms",name:"Lead forms",description:"Valuation, quote, catering, contact, or booking inquiries.",category:"growth",icon:"✎",accent:"#38bdf8",defaultBlock:"form"}, gallery:{key:"gallery",name:"Gallery",description:"Photos, video, embeds, and captions.",category:"content",icon:"▧",accent:"#c084fc",defaultBlock:"gallery"}, sms_opt_in:{key:"sms_opt_in",name:"Text club",description:"Consent-aware SMS sign-up and offers.",category:"engagement",icon:"⌁",accent:"#2dd4bf",defaultBlock:"sms"}, analytics:{key:"analytics",name:"Analytics",description:"Views, scans, clicks, leads, and conversion events.",category:"operations",icon:"◱",accent:"#94a3b8",defaultBlock:"analytics"}, live_session:{key:"live_session",name:"Live requests",description:"QR rooms, fan requests, queues, and live voting.",category:"engagement",icon:"♫",accent:"#a78bfa",defaultBlock:"live"}, tips:{key:"tips",name:"Tips",description:"Tipping and payouts through Stripe Connect.",category:"commerce",icon:"♥",accent:"#4ade80",defaultBlock:"tips"}, content_wall:{key:"content_wall",name:"Content wall",description:"Posts, gated content, and memberships.",category:"content",icon:"≡",accent:"#fb7185",defaultBlock:"posts"}, loyalty:{key:"loyalty",name:"Loyalty",description:"Points, rewards, and Trip Pass participation.",category:"engagement",icon:"◎",accent:"#fbbf24",defaultBlock:"loyalty"}, ai_media:{key:"ai_media",name:"AI media",description:"Credit-metered cover, photo, and promo creation.",category:"content",icon:"✧",accent:"#818cf8",defaultBlock:"media"}, team:{key:"team",name:"Team",description:"Staff roles, shared management, and many profiles.",category:"operations",icon:"◉",accent:"#38bdf8",defaultBlock:"team"}
 };
+export const moduleList = MODULE_KEYS.map((key) => moduleRegistry[key]);
