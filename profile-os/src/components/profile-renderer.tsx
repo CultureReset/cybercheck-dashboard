@@ -1,5 +1,6 @@
-import { moduleRegistry, type ModuleKey } from "../lib/modules";
+import { moduleRegistry, RENDERED_COMPONENTS, RENDERED_PUBLIC_MODULES, type ModuleKey } from "../lib/modules";
 import { PublicLeadForm } from "./public-lead-form";
+import { ShareButton } from "./share-button";
 
 type Entry = { id: string; title: string; summary?: string | null; price_from?: number | null; primary_image_url?: string | null };
 type Event = { id: string; title: string; description?: string | null; event_kind?: string | null; starts_at?: string | null };
@@ -7,6 +8,11 @@ type Block = { id: string; module_key: string; block_key: string; title: string 
 type Props = { profile: { slug: string; display_name: string; short_description: string | null; cover_url: string | null; logo_url: string | null; theme: Record<string, string> | null; city: string | null; region: string | null }; actions: Array<{ label: string; href: string; action_type: string }>; blocks: Block[] };
 const money = (amount?: number | null) => amount == null ? null : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: amount >= 1000 ? 0 : 2 }).format(amount);
 const blockTone = (block: Block) => String(block.config?.style ?? "glass");
+const shopItems = (block: Block) => {
+  const products = block.data?.products ?? [];
+  if (products.length) return products;
+  return block.data?.entries ?? [];
+};
 
 function Items({ items, compact = false }: { items: Entry[]; compact?: boolean }) {
   if (!items.length) return <p className="empty-state">Add items from the dashboard to bring this block to life.</p>;
@@ -16,10 +22,76 @@ function EventCards({ events }: { events: Event[] }) {
   if (!events.length) return <p className="empty-state">Schedule an event, an open house, or a live set.</p>;
   return <div className="event-list">{events.map((event) => <article key={event.id} className="event-card"><span className="event-date">{event.starts_at ? new Date(event.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "UP"}</span><div><strong>{event.title}</strong><p>{event.description ?? event.event_kind}</p></div><span>›</span></article>)}</div>;
 }
-function LiveBlock({ block }: { block: Block }) { return <div className="live-block"><span className="live-pill"><i /> live now</span><h3>{block.config?.headline?.toString() ?? "Make a request"}</h3><p>Scan, choose, and move your favorite to the top of the queue.</p><button>Request something ›</button></div>; }
-const blockComponents: Record<string, (block: Block, slug: string) => React.ReactNode> = { menu: (block) => <Items items={block.data?.entries ?? []} compact />, catalog: (block) => <Items items={block.data?.entries ?? []} />, shop: (block) => <Items items={block.data?.products ?? block.data?.entries ?? []} />, events: (block) => <EventCards events={block.data?.events ?? []} />, live_session: (block) => <LiveBlock block={block} />, lead_forms: (block, slug) => <PublicLeadForm slug={slug} blockKey={block.block_key} config={block.config} />, specials: (block) => <Items items={block.data?.entries ?? []} compact /> };
+function LiveBlock({ block }: { block: Block }) {
+  return <div className="live-block"><span className="live-pill"><i /> live now</span><h3>{block.config?.headline?.toString() ?? "Make a request"}</h3><p>Scan, choose, and move your favorite to the top of the queue. Live requests open here soon.</p></div>;
+}
+const blockComponents: Record<string, (block: Block, slug: string) => React.ReactNode> = {
+  menu: (block) => <Items items={block.data?.entries ?? []} compact />,
+  catalog: (block) => <Items items={block.data?.entries ?? []} />,
+  shop: (block) => <Items items={shopItems(block)} />,
+  events: (block) => <EventCards events={block.data?.events ?? []} />,
+  live_session: (block) => <LiveBlock block={block} />,
+  lead_forms: (block, slug) => <PublicLeadForm slug={slug} blockKey={block.block_key} config={block.config} />,
+  form: (block, slug) => <PublicLeadForm slug={slug} blockKey={block.block_key} config={block.config} />,
+  specials: (block) => <Items items={block.data?.entries ?? []} compact />
+};
+
+function resolveComponent(block: Block) {
+  const fromConfig = String(block.config?.component ?? "");
+  if (fromConfig && RENDERED_COMPONENTS.has(fromConfig) && blockComponents[fromConfig]) return blockComponents[fromConfig];
+  if (RENDERED_PUBLIC_MODULES.has(block.module_key) && blockComponents[block.module_key]) return blockComponents[block.module_key];
+  return null;
+}
 
 export function ProfileRenderer({ profile, actions, blocks }: Props) {
-  const accent = profile.theme?.accent ?? "#10b981"; const location = [profile.city, profile.region].filter(Boolean).join(", ");
-  return <main className="public-page" style={{ "--accent": accent } as React.CSSProperties}><div className="page-shell"><section className="profile-hero" style={profile.cover_url ? { backgroundImage: `linear-gradient(180deg, transparent 15%, #0b1020 100%), url(${profile.cover_url})` } : undefined}><div className="hero-top"><span className="brand-mark">cc</span><button aria-label="Share profile">↗</button></div><div className="identity">{profile.logo_url ? <img src={profile.logo_url} alt="" /> : <span className="identity-fallback">{profile.display_name.slice(0, 1)}</span>}<div><p className="eyebrow">{location || "Your local link"}</p><h1>{profile.display_name}</h1><p className="hero-copy">{profile.short_description}</p></div></div></section>{actions.length > 0 && <nav className="quick-actions">{actions.map((action) => <a key={`${action.action_type}-${action.label}`} href={`/api/public/${profile.slug}/actions?href=${encodeURIComponent(action.href)}&label=${encodeURIComponent(action.label)}`}><span>{action.label}</span><b>›</b></a>)}</nav>}<div className="block-stack">{blocks.map((block) => { const component = blockComponents[String(block.config?.component ?? block.module_key)]; const module = moduleRegistry[block.module_key as ModuleKey]; return <section key={block.id} className={`profile-block tone-${blockTone(block)}`}><div className="block-heading"><div><span className="module-kicker" style={{ color: module?.accent }}>{module?.icon} {module?.name ?? "Custom app"}</span><h2>{block.title ?? module?.name ?? "Custom app"}</h2></div>{["menu", "catalog", "events", "shop"].includes(block.module_key) && <button className="text-button">See all</button>}</div>{component ? component(block, profile.slug) : <div className="module-ready"><span>{module?.icon ?? "◈"}</span><p>{module?.description ?? "This installed custom app is ready to configure."}</p></div>}</section>; })}</div><footer>Powered by <b>CyberCheck</b></footer></div></main>;
+  const accent = profile.theme?.accent ?? "#10b981";
+  const location = [profile.city, profile.region].filter(Boolean).join(", ");
+  const visibleBlocks = blocks.filter((block) => resolveComponent(block));
+  return (
+    <main className="public-page" style={{ "--accent": accent } as React.CSSProperties}>
+      <div className="page-shell">
+        <section className="profile-hero" style={profile.cover_url ? { backgroundImage: `linear-gradient(180deg, transparent 15%, #0b1020 100%), url(${profile.cover_url})` } : undefined}>
+          <div className="hero-top">
+            <span className="brand-mark">cc</span>
+            <ShareButton title={profile.display_name} path={`/${profile.slug}`} />
+          </div>
+          <div className="identity">
+            {profile.logo_url ? <img src={profile.logo_url} alt="" /> : <span className="identity-fallback">{profile.display_name.slice(0, 1)}</span>}
+            <div>
+              <p className="eyebrow">{location || "Your local link"}</p>
+              <h1>{profile.display_name}</h1>
+              <p className="hero-copy">{profile.short_description}</p>
+            </div>
+          </div>
+        </section>
+        {actions.length > 0 && (
+          <nav className="quick-actions">
+            {actions.map((action) => (
+              <a key={`${action.action_type}-${action.label}`} href={`/api/public/${profile.slug}/actions?href=${encodeURIComponent(action.href)}&label=${encodeURIComponent(action.label)}`}>
+                <span>{action.label}</span><b>›</b>
+              </a>
+            ))}
+          </nav>
+        )}
+        <div className="block-stack">
+          {visibleBlocks.map((block) => {
+            const component = resolveComponent(block)!;
+            const module = moduleRegistry[block.module_key as ModuleKey];
+            return (
+              <section key={block.id} className={`profile-block tone-${blockTone(block)}`}>
+                <div className="block-heading">
+                  <div>
+                    <span className="module-kicker" style={{ color: module?.accent }}>{module?.icon} {module?.name ?? "Custom app"}</span>
+                    <h2>{block.title ?? module?.name ?? "Custom app"}</h2>
+                  </div>
+                </div>
+                {component(block, profile.slug)}
+              </section>
+            );
+          })}
+        </div>
+        <footer>Powered by <b>CyberCheck</b></footer>
+      </div>
+    </main>
+  );
 }

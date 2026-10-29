@@ -1,15 +1,17 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { moduleRegistry as starterRegistry, type ModuleDefinition, type ModuleKey } from "../lib/modules";
+import { isComingSoonModule, moduleRegistry as starterRegistry, type ModuleDefinition, type ModuleKey } from "../lib/modules";
 import { ContentManager } from "./content-manager";
 
 const moduleRegistry: Record<string, ModuleDefinition> = new Proxy(starterRegistry as Record<string, ModuleDefinition>, { get: (target, key: string) => target[key] ?? { key, name: key.replaceAll("-", " "), description: "Custom app block", category: "content", icon: "◈", accent: "#38bdf8", defaultBlock: "block" } });
 
 type Block = { id: string; module_key: string; block_key: string; title: string | null; config: Record<string, unknown> | null; sort_order: number; is_visible: boolean };
 type Installed = { profile_id: string; module_key: string; is_enabled: boolean; config: Record<string, unknown> | null };
-type Profile = { id: string; slug: string; display_name: string; short_description: string | null; status: string; is_public: boolean; theme: Record<string, string>; recommendation_goals: string[]; installed: Installed[]; blocks: Block[] };
+type Profile = { id: string; slug: string; display_name: string; short_description: string | null; status: string; is_public: boolean; theme: Record<string, string>; recommendation_goals: string[]; role?: string; canWrite?: boolean; installed: Installed[]; blocks: Block[] };
 type StudioData = { profiles: Profile[]; modules: ModuleDefinition[] };
-const categories = ["all", "growth", "commerce", "engagement", "content"] as const;
+const categories = ["all", "growth", "commerce", "engagement", "operations", "content"] as const;
+const PROFILE_STORAGE_KEY = "profile-os-active-profile";
+const DEFAULT_APPS = new Set(["quick_actions"]);
 const goals: Array<{ key: string; label: string; modules: ModuleKey[] }> = [
   { key: "show_food_or_services", label: "Show food or services", modules: ["menu", "catalog", "quick_actions"] },
   { key: "sell_online", label: "Sell products", modules: ["shop", "catalog", "analytics"] },
@@ -21,21 +23,221 @@ const goals: Array<{ key: string; label: string; modules: ModuleKey[] }> = [
 ];
 
 export function ModuleStudio() {
-  const [data, setData] = useState<StudioData | null>(null); const [profileId, setProfileId] = useState(""); const [filter, setFilter] = useState<typeof categories[number]>("all"); const [selected, setSelected] = useState<Block | null>(null); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
-  const load = async () => { const response = await fetch("/api/studio", { cache: "no-store" }); if (!response.ok) return location.assign("/login"); const next = await response.json() as StudioData; setData(next); setProfileId((current) => current || next.profiles[0]?.id || ""); };
+  const [data, setData] = useState<StudioData | null>(null);
+  const [profileId, setProfileId] = useState("");
+  const [filter, setFilter] = useState<typeof categories[number]>("all");
+  const [selected, setSelected] = useState<Block | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const load = async () => {
+    const response = await fetch("/api/studio", { cache: "no-store" });
+    if (!response.ok) return location.assign("/login");
+    const next = await response.json() as StudioData;
+    setData(next);
+    setProfileId((current) => {
+      const saved = typeof window !== "undefined" ? window.localStorage.getItem(PROFILE_STORAGE_KEY) : null;
+      if (current && next.profiles.some((p) => p.id === current)) return current;
+      if (saved && next.profiles.some((p) => p.id === saved)) return saved;
+      return next.profiles[0]?.id || "";
+    });
+  };
   useEffect(() => { void load(); }, []);
-  const profile = data?.profiles.find((item) => item.id === profileId); const installed = new Set(profile?.installed.filter((item) => item.is_enabled).map((item) => item.module_key) ?? []); const apps = useMemo(() => (data?.modules ?? []).filter((app) => filter === "all" || app.category === filter), [data, filter]);
-  async function moduleChange(key: string, enable: boolean) { if (!profile) return; setBusy(true); setError(""); const response = await fetch(`/api/studio/profiles/${profile.id}/modules`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ moduleKey: key, enable }) }); setBusy(false); if (!response.ok) return setError("Could not update that app."); await load(); }
-  async function toggleGoal(goal: string) { if (!profile) return; const next = profile.recommendation_goals.includes(goal) ? profile.recommendation_goals.filter((item) => item !== goal) : [...profile.recommendation_goals, goal]; setBusy(true); const response = await fetch(`/api/studio/profiles/${profile.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ recommendation_goals: next }) }); setBusy(false); if (!response.ok) return setError("Could not save recommendations."); await load(); }
-  async function saveStack(blocks: Block[]) { if (!profile) return; setBusy(true); const response = await fetch(`/api/studio/profiles/${profile.id}/blocks`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ blocks }) }); setBusy(false); if (!response.ok) return setError("Could not save block order."); await load(); }
-  async function addBlock(moduleKey: string) { if (!profile) return; setBusy(true); const response = await fetch(`/api/studio/profiles/${profile.id}/blocks`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ moduleKey }) }); setBusy(false); if (!response.ok) return setError("Install the app before adding a block."); await load(); }
-  async function saveBlock(block: Block) { if (!profile) return; setBusy(true); const response = await fetch(`/api/studio/profiles/${profile.id}/blocks/${block.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ title: block.title, config: block.config, is_visible: block.is_visible }) }); setBusy(false); if (!response.ok) return setError("Could not save block settings."); setSelected(null); await load(); }
-  const move = (block: Block, direction: -1 | 1) => { const blocks = [...(profile?.blocks ?? [])]; const index = blocks.findIndex((item) => item.id === block.id); const target = index + direction; if (target < 0 || target >= blocks.length) return; [blocks[index], blocks[target]] = [blocks[target], blocks[index]]; void saveStack(blocks); };
+  useEffect(() => {
+    if (profileId && typeof window !== "undefined") window.localStorage.setItem(PROFILE_STORAGE_KEY, profileId);
+  }, [profileId]);
+
+  const profile = data?.profiles.find((item) => item.id === profileId);
+  const canWrite = profile?.canWrite !== false;
+  const installed = new Set(profile?.installed.filter((item) => item.is_enabled).map((item) => item.module_key) ?? []);
+  const meaningfulInstalled = [...installed].filter((key) => !DEFAULT_APPS.has(key));
+  const showWelcome = meaningfulInstalled.length === 0;
+  const apps = useMemo(() => (data?.modules ?? []).filter((app) => filter === "all" || app.category === filter), [data, filter]);
+
+  async function moduleChange(key: string, enable: boolean) {
+    if (!profile || !canWrite) return;
+    if (enable && isComingSoonModule(key)) return;
+    setBusy(true); setError("");
+    const response = await fetch(`/api/studio/profiles/${profile.id}/modules`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ moduleKey: key, enable }) });
+    setBusy(false);
+    if (!response.ok) return setError(response.status === 403 ? "Your role cannot change apps." : "Could not update that app.");
+    await load();
+  }
+  async function toggleGoal(goal: string) {
+    if (!profile || !canWrite) return;
+    const next = profile.recommendation_goals.includes(goal) ? profile.recommendation_goals.filter((item) => item !== goal) : [...profile.recommendation_goals, goal];
+    setBusy(true);
+    const response = await fetch(`/api/studio/profiles/${profile.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ recommendation_goals: next }) });
+    setBusy(false);
+    if (!response.ok) return setError("Could not save recommendations.");
+    await load();
+  }
+  async function saveStack(blocks: Block[]) {
+    if (!profile || !canWrite) return;
+    setBusy(true);
+    const response = await fetch(`/api/studio/profiles/${profile.id}/blocks`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ blocks }) });
+    setBusy(false);
+    if (!response.ok) return setError("Could not save block order.");
+    await load();
+  }
+  async function addBlock(moduleKey: string) {
+    if (!profile || !canWrite) return;
+    setBusy(true);
+    const response = await fetch(`/api/studio/profiles/${profile.id}/blocks`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ moduleKey }) });
+    setBusy(false);
+    if (!response.ok) return setError("Install the app before adding a block.");
+    await load();
+  }
+  async function saveBlock(block: Block) {
+    if (!profile || !canWrite) return;
+    setBusy(true);
+    const response = await fetch(`/api/studio/profiles/${profile.id}/blocks/${block.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ title: block.title, config: block.config, is_visible: block.is_visible }) });
+    setBusy(false);
+    if (!response.ok) return setError("Could not save block settings.");
+    setSelected(null);
+    await load();
+  }
+  const move = (block: Block, direction: -1 | 1) => {
+    if (!canWrite) return;
+    const blocks = [...(profile?.blocks ?? [])];
+    const index = blocks.findIndex((item) => item.id === block.id);
+    const target = index + direction;
+    if (target < 0 || target >= blocks.length) return;
+    [blocks[index], blocks[target]] = [blocks[target], blocks[index]];
+    void saveStack(blocks);
+  };
+
   if (!data) return <main className="studio"><p>Loading your Profile OS…</p></main>;
   if (!profile) return <Onboard onComplete={load} />;
-  const recommended = [...new Set(goals.filter((goal) => profile.recommendation_goals.includes(goal.key)).flatMap((goal) => goal.modules))].map((key) => moduleRegistry[key]).filter((app) => !installed.has(app.key));
-  return <main className="studio"><header className="studio-head"><div><span className="studio-eyebrow">PROFILE STUDIO</span><h1>Build your page from apps.</h1><p>Every installed app makes reusable Lego blocks. Nothing depends on business type.</p></div><div className="studio-profile"><select value={profile.id} onChange={(event) => { setProfileId(event.target.value); setSelected(null); }}><option value={profile.id}>{profile.display_name}</option></select><a className="publish" href={`/${profile.slug}`} target="_blank">View page ↗</a><form action="/auth/signout" method="post"><button className="auth-switch">Sign out</button></form></div></header>{error && <p className="studio-error">{error}</p>}<section className="studio-grid"><aside className="marketplace"><div className="panel-heading"><div><span>APP MARKETPLACE</span><h2>Choose your tools</h2></div><b>{installed.size} installed</b></div><div className="goal-panel"><span>WHAT DO YOU WANT THIS PROFILE TO DO?</span><div>{goals.map((goal) => <button key={goal.key} disabled={busy} onClick={() => void toggleGoal(goal.key)} className={profile.recommendation_goals.includes(goal.key) ? "selected" : ""}>{goal.label}</button>)}</div></div>{recommended.length > 0 && <div className="recommendations"><span>RECOMMENDED FOR YOUR GOALS</span>{recommended.map((app) => <button key={app.key} disabled={busy} onClick={() => void moduleChange(app.key, true)}><b style={{ color: app.accent }}>{app.icon}</b>{app.name}<em>Install +</em></button>)}</div>}<div className="filter-row">{categories.map((category) => <button onClick={() => setFilter(category)} className={filter === category ? "selected" : ""} key={category}>{category}</button>)}</div><div className="app-grid">{apps.map((app) => { const active = installed.has(app.key); return <article className="app-card" key={app.key}><span className="app-icon" style={{ background: `${app.accent}26`, color: app.accent }}>{app.icon}</span><div><small>{app.category}</small><h3>{app.name}</h3><p>{app.description}</p></div><button disabled={busy} onClick={() => void moduleChange(app.key, !active)} className={active ? "installed" : "install"}>{active ? "Installed ✓" : "Install +"}</button></article>; })}</div></aside><section className="stack-editor"><div className="panel-heading"><div><span>PUBLIC PAGE · {profile.status}</span><h2>Your block stack</h2></div><b>{profile.is_public ? "Live" : "Draft"}</b></div><p className="stack-note">Move blocks, hide them, or open one to change its heading and display settings. Removing an app hides its blocks but preserves its data.</p><div className="stack-list">{profile.blocks.map((block, index) => { const app = moduleRegistry[block.module_key]; return <article className={`stack-block ${block.is_visible ? "" : "muted"}`} key={block.id}><span className="grab">⠿</span><span className="app-icon small" style={{ background: `${app.accent}26`, color: app.accent }}>{app.icon}</span><button className="stack-title" onClick={() => setSelected(block)}><strong>{block.title ?? app.name}</strong><small>{app.name} · block {index + 1}</small></button><div className="block-actions"><button disabled={busy} onClick={() => move(block, -1)} aria-label="Move up">↑</button><button disabled={busy} onClick={() => move(block, 1)} aria-label="Move down">↓</button><button disabled={busy} onClick={() => void saveBlock({ ...block, is_visible: !block.is_visible })}>{block.is_visible ? "◉" : "○"}</button></div></article>; })}</div><div className="add-block">{[...installed].map((key) => <button key={key} disabled={busy} onClick={() => void addBlock(key)}>+ {moduleRegistry[key].name} block</button>)}</div>{selected && <><BlockSettings key={selected.id} block={selected} module={moduleRegistry[selected.module_key]} onCancel={() => setSelected(null)} onSave={saveBlock} /><ContentManager profileId={profile.id} moduleKey={selected.module_key} /></>}</section></section></main>;
+  const recommended = [...new Set(goals.filter((goal) => profile.recommendation_goals.includes(goal.key)).flatMap((goal) => goal.modules))]
+    .map((key) => moduleRegistry[key])
+    .filter((app) => !installed.has(app.key) && !isComingSoonModule(app.key));
+
+  return (
+    <main className="studio">
+      <header className="studio-head">
+        <div>
+          <span className="studio-eyebrow">PROFILE STUDIO</span>
+          <h1>Build your page from apps.</h1>
+          <p>Every installed app makes reusable Lego blocks. Nothing depends on business type.</p>
+        </div>
+        <div className="studio-profile">
+          <label className="sr-only" htmlFor="profile-switcher">Active profile</label>
+          <select id="profile-switcher" value={profile.id} onChange={(event) => { setProfileId(event.target.value); setSelected(null); }}>
+            {data.profiles.map((item) => <option key={item.id} value={item.id}>{item.display_name}</option>)}
+          </select>
+          <a className="publish" href={`/${profile.slug}`} target="_blank" rel="noreferrer">View public page ↗</a>
+          <form action="/auth/signout" method="post"><button className="auth-switch">Sign out</button></form>
+        </div>
+      </header>
+      {!canWrite && <p className="studio-error">You have viewer access — you can browse this studio but cannot change apps or content.</p>}
+      {error && <p className="studio-error">{error}</p>}
+      <section className="studio-grid">
+        <aside className="marketplace">
+          <div className="panel-heading"><div><span>APP MARKETPLACE</span><h2>Choose your tools</h2></div><b>{installed.size} installed</b></div>
+          <div className="goal-panel">
+            <span>WHAT DO YOU WANT THIS PROFILE TO DO?</span>
+            <div>{goals.map((goal) => <button key={goal.key} disabled={busy || !canWrite} onClick={() => void toggleGoal(goal.key)} className={profile.recommendation_goals.includes(goal.key) ? "selected" : ""}>{goal.label}</button>)}</div>
+          </div>
+          {recommended.length > 0 && (
+            <div className="recommendations">
+              <span>RECOMMENDED FOR YOUR GOALS</span>
+              {recommended.map((app) => <button key={app.key} disabled={busy || !canWrite} onClick={() => void moduleChange(app.key, true)}><b style={{ color: app.accent }}>{app.icon}</b>{app.name}<em>Install +</em></button>)}
+            </div>
+          )}
+          <div className="filter-row">{categories.map((category) => <button onClick={() => setFilter(category)} className={filter === category ? "selected" : ""} key={category}>{category}</button>)}</div>
+          <div className="app-grid">
+            {apps.map((app) => {
+              const active = installed.has(app.key);
+              const comingSoon = isComingSoonModule(app.key);
+              return (
+                <article className={`app-card ${comingSoon ? "coming-soon" : ""}`} key={app.key}>
+                  <span className="app-icon" style={{ background: `${app.accent}26`, color: app.accent }}>{app.icon}</span>
+                  <div>
+                    <small>{app.category}{comingSoon ? " · coming soon" : ""}</small>
+                    <h3>{app.name}</h3>
+                    <p>{app.description}</p>
+                  </div>
+                  {comingSoon ? (
+                    <button type="button" className="coming-soon-btn" disabled>Coming soon</button>
+                  ) : (
+                    <button disabled={busy || !canWrite} onClick={() => void moduleChange(app.key, !active)} className={active ? "installed" : "install"}>{active ? "Installed ✓" : "Install +"}</button>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        </aside>
+        <section className="stack-editor">
+          <div className="panel-heading"><div><span>PUBLIC PAGE · {profile.status}</span><h2>Your block stack</h2></div><b>{profile.is_public ? "Live" : "Draft"}</b></div>
+          {showWelcome ? (
+            <div className="welcome-empty">
+              <span className="studio-eyebrow">WELCOME</span>
+              <h3>Your public page is a blank canvas.</h3>
+              <p>Pick a goal above or install an app from the marketplace. Each app adds a Lego block you can reorder, rename, and fill with content.</p>
+              <a className="publish" href={`/${profile.slug}`} target="_blank" rel="noreferrer">View public page ↗</a>
+            </div>
+          ) : (
+            <>
+              <p className="stack-note">Move blocks, hide them, or open one to change its heading and display settings. Removing an app hides its blocks but preserves its data.</p>
+              <div className="stack-list">
+                {profile.blocks.map((block, index) => {
+                  const app = moduleRegistry[block.module_key];
+                  return (
+                    <article className={`stack-block ${block.is_visible ? "" : "muted"}`} key={block.id}>
+                      <span className="grab">⠿</span>
+                      <span className="app-icon small" style={{ background: `${app.accent}26`, color: app.accent }}>{app.icon}</span>
+                      <button className="stack-title" onClick={() => setSelected(block)}><strong>{block.title ?? app.name}</strong><small>{app.name} · block {index + 1}{isComingSoonModule(block.module_key) ? " · coming soon" : ""}</small></button>
+                      <div className="block-actions">
+                        <button disabled={busy || !canWrite} onClick={() => move(block, -1)} aria-label="Move up">↑</button>
+                        <button disabled={busy || !canWrite} onClick={() => move(block, 1)} aria-label="Move down">↓</button>
+                        <button disabled={busy || !canWrite} onClick={() => void saveBlock({ ...block, is_visible: !block.is_visible })}>{block.is_visible ? "◉" : "○"}</button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="add-block">
+                {[...installed].filter((key) => !isComingSoonModule(key)).map((key) => (
+                  <button key={key} disabled={busy || !canWrite} onClick={() => void addBlock(key)}>+ {moduleRegistry[key].name} block</button>
+                ))}
+              </div>
+            </>
+          )}
+          {selected && (
+            <>
+              <BlockSettings key={selected.id} block={selected} module={moduleRegistry[selected.module_key]} readOnly={!canWrite} onCancel={() => setSelected(null)} onSave={saveBlock} />
+              {canWrite && <ContentManager profileId={profile.id} moduleKey={selected.module_key} />}
+            </>
+          )}
+        </section>
+      </section>
+    </main>
+  );
 }
 
-function Onboard({ onComplete }: { onComplete: () => Promise<void> }) { const [name, setName] = useState(""); const [slug, setSlug] = useState(""); const [error, setError] = useState(""); async function create(event: React.FormEvent) { event.preventDefault(); const response = await fetch("/api/studio/onboard", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ displayName: name, slug }) }); if (!response.ok) return setError((await response.json()).error ?? "Could not create your workspace."); await onComplete(); } return <main className="studio"><form className="login-card" onSubmit={create}><span className="studio-eyebrow">PROFILE OS SETUP</span><h1>Create the first profile.</h1><p>This is a blank modular workspace. Choose apps after it is created.</p><label>Profile name<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>Public URL<input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="your-business" required /></label>{error && <small className="form-message">{error}</small>}<button className="publish">Create workspace</button></form></main>; }
-function BlockSettings({ block, module, onCancel, onSave }: { block: Block; module: ModuleDefinition; onCancel: () => void; onSave: (block: Block) => Promise<void> }) { const [draft, setDraft] = useState(block); const setConfig = (key: string, value: string) => setDraft({ ...draft, config: { ...draft.config, [key]: value } }); return <section className="settings-panel"><div><span className="studio-eyebrow">CONFIGURE {module.name}</span><h3>{draft.title ?? module.name}</h3></div><label>Block title<input value={draft.title ?? ""} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></label><label>Visual style<select value={String(draft.config?.style ?? "glass")} onChange={(e) => setConfig("style", e.target.value)}><option value="glass">Glass cards</option><option value="solid">Solid accent</option></select></label>{draft.module_key === "live_session" && <label>Live headline<input value={String(draft.config?.headline ?? "")} onChange={(e) => setConfig("headline", e.target.value)} /></label>}{draft.module_key === "lead_forms" && <><label>Form intro<input value={String(draft.config?.description ?? "")} onChange={(e) => setConfig("description", e.target.value)} /></label><label>Submit label<input value={String(draft.config?.button_label ?? "")} onChange={(e) => setConfig("button_label", e.target.value)} /></label></>}<div className="settings-actions"><button className="auth-switch" onClick={onCancel}>Cancel</button><button className="publish" onClick={() => void onSave(draft)}>Save settings</button></div></section>; }
+function Onboard({ onComplete }: { onComplete: () => Promise<void> }) {
+  const [name, setName] = useState(""); const [slug, setSlug] = useState(""); const [error, setError] = useState("");
+  async function create(event: React.FormEvent) {
+    event.preventDefault();
+    const response = await fetch("/api/studio/onboard", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ displayName: name, slug }) });
+    if (!response.ok) return setError((await response.json()).error ?? "Could not create your workspace.");
+    await onComplete();
+  }
+  return <main className="studio"><form className="login-card" onSubmit={create}><span className="studio-eyebrow">PROFILE OS SETUP</span><h1>Create the first profile.</h1><p>This is a blank modular workspace. Choose apps after it is created.</p><label>Profile name<input value={name} onChange={(event) => setName(event.target.value)} required /></label><label>Public URL<input value={slug} onChange={(event) => setSlug(event.target.value)} placeholder="your-business" required /></label>{error && <small className="form-message">{error}</small>}<button className="publish">Create workspace</button></form></main>;
+}
+
+function BlockSettings({ block, module, readOnly, onCancel, onSave }: { block: Block; module: ModuleDefinition; readOnly?: boolean; onCancel: () => void; onSave: (block: Block) => Promise<void> }) {
+  const [draft, setDraft] = useState(block);
+  const setConfig = (key: string, value: string) => setDraft({ ...draft, config: { ...draft.config, [key]: value } });
+  return (
+    <section className="settings-panel">
+      <div><span className="studio-eyebrow">CONFIGURE {module.name}</span><h3>{draft.title ?? module.name}</h3></div>
+      <label>Block title<input value={draft.title ?? ""} disabled={readOnly} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></label>
+      <label>Visual style<select disabled={readOnly} value={String(draft.config?.style ?? "glass")} onChange={(e) => setConfig("style", e.target.value)}><option value="glass">Glass cards</option><option value="solid">Solid accent</option></select></label>
+      {draft.module_key === "live_session" && <label>Live headline<input disabled={readOnly} value={String(draft.config?.headline ?? "")} onChange={(e) => setConfig("headline", e.target.value)} /></label>}
+      {draft.module_key === "lead_forms" && <><label>Form intro<input disabled={readOnly} value={String(draft.config?.description ?? "")} onChange={(e) => setConfig("description", e.target.value)} /></label><label>Submit label<input disabled={readOnly} value={String(draft.config?.button_label ?? "")} onChange={(e) => setConfig("button_label", e.target.value)} /></label></>}
+      <div className="settings-actions"><button className="auth-switch" onClick={onCancel}>Cancel</button>{!readOnly && <button className="publish" onClick={() => void onSave(draft)}>Save settings</button>}</div>
+    </section>
+  );
+}

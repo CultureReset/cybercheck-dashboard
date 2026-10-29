@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticatedUserId } from "../../../../../../lib/supabase-auth-server";
-import { memberForProfile } from "../../../../../../lib/studio";
+import { memberForProfile, requireWriteAccess } from "../../../../../../lib/studio";
 import { serverDb } from "../../../../../../lib/supabase-server";
 
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 70);
@@ -14,7 +14,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ prof
 }
 export async function POST(request: Request, { params }: { params: Promise<{ profileId: string }> }) {
   const userId = await authenticatedUserId(); if (!userId) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-  const { profileId } = await params; const member = await memberForProfile(userId, profileId); if (!member) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  const { profileId } = await params; let member; try { member = await requireWriteAccess(userId, profileId); } catch { return NextResponse.json({ error: "Not allowed" }, { status: 403 }); }
   const body = await request.json(); const kind = String(body.kind ?? "catalog"); const title = String(body.title ?? "").trim(); if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 }); const db = serverDb();
   if (kind === "events") { const { data, error } = await db.schema("profile_os").from("events").insert({ organization_id: member.organization_id, profile_id: profileId, title, description: String(body.summary ?? "") || null, event_kind: String(body.eventKind ?? "event") }).select("id").single(); if (error) return NextResponse.json({ error: "Could not create event" }, { status: 400 }); return NextResponse.json({ id: data.id }, { status: 201 }); }
   const typeMap: Record<string, string> = { menu: "menu_item", shop: "product", catalog: "service", listings: "listing", songs: "song" }; const entryType = typeMap[kind] ?? "service"; const { data: entry, error } = await db.schema("profile_os").from("catalog_entries").insert({ organization_id: member.organization_id, profile_id: profileId, entry_type: entryType, title, slug: `${slugify(title)}-${crypto.randomUUID().slice(0, 6)}`, summary: String(body.summary ?? "") || null, price_from: body.price === "" || body.price == null ? null : Number(body.price), primary_image_url: String(body.imageUrl ?? "") || null }).select("id").single(); if (error || !entry) return NextResponse.json({ error: "Could not create item" }, { status: 400 });

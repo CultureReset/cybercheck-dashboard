@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { serverDb } from "../../../../../lib/supabase-server";
+import { clientIp, rateLimit } from "../../../../../lib/rate-limit";
 
 const clean = (value: unknown, limit = 500) => typeof value === "string" ? value.trim().slice(0, limit) : "";
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const limited = rateLimit(`public-form:${clientIp(request)}`, 10, 60_000);
+  if (!limited.ok) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(limited.retryAfterSec) } });
+  }
   const { slug } = await params; const body = await request.json(); const name = clean(body.name, 120); const contact = clean(body.contact, 200); const message = clean(body.message, 2000); const blockKey = clean(body.blockKey, 80);
   if (!name || !contact) return NextResponse.json({ error: "Name and email or phone are required." }, { status: 400 });
   const db = serverDb(); const { data: profile } = await db.schema("profile_os").from("profiles").select("id,organization_id,slug").eq("slug", slug).eq("status", "published").eq("is_public", true).maybeSingle();

@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { authenticatedUserId } from "../../../../../../lib/supabase-auth-server";
-import { memberForProfile } from "../../../../../../lib/studio";
+import { requireWriteAccess } from "../../../../../../lib/studio";
 import { serverDb } from "../../../../../../lib/supabase-server";
 
 export async function POST(request: Request, { params }: { params: Promise<{ profileId: string }> }) {
   const userId = await authenticatedUserId(); if (!userId) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-  const { profileId } = await params; const member = await memberForProfile(userId, profileId); if (!member) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  const { profileId } = await params;
+  let member;
+  try { member = await requireWriteAccess(userId, profileId); } catch { return NextResponse.json({ error: "Not allowed" }, { status: 403 }); }
   const body = await request.json(); const moduleKey = String(body.moduleKey ?? ""); if (!moduleKey) return NextResponse.json({ error: "Unknown app" }, { status: 400 });
   const db = serverDb(); const { data: enabled } = await db.schema("profile_os").from("profile_modules").select("module_key").eq("profile_id", profileId).eq("module_key", moduleKey).eq("is_enabled", true).maybeSingle();
   if (!enabled) return NextResponse.json({ error: "Install this app before adding its blocks." }, { status: 400 });
@@ -19,7 +21,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ profileId: string }> }) {
   const userId = await authenticatedUserId(); if (!userId) return NextResponse.json({ error: "Sign in required" }, { status: 401 });
-  const { profileId } = await params; if (!await memberForProfile(userId, profileId)) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  const { profileId } = await params;
+  try { await requireWriteAccess(userId, profileId); } catch { return NextResponse.json({ error: "Not allowed" }, { status: 403 }); }
   const body = await request.json(); const blocks: Array<{ id: string; is_visible: boolean }> = Array.isArray(body.blocks) ? body.blocks : [];
   const ids = blocks.map((block: { id: string }) => String(block.id)); if (!ids.length) return NextResponse.json({ ok: true });
   const db = serverDb(); const { data: owned } = await db.schema("profile_os").from("profile_blocks").select("id").eq("profile_id", profileId).in("id", ids);
