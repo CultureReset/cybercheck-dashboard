@@ -1,6 +1,6 @@
 export const MODULE_KEYS = ["quick_actions", "catalog", "menu", "specials", "events", "booking", "shop", "reviews", "lead_forms", "gallery", "sms_opt_in", "analytics", "live_session", "tips", "content_wall", "loyalty", "ai_media", "team"] as const;
 export type ModuleKey = (typeof MODULE_KEYS)[number];
-export type ModuleDefinition = { key: ModuleKey; name: string; description: string; category: "growth" | "commerce" | "engagement" | "operations" | "content"; icon: string; accent: string; defaultBlock: string };
+export type ModuleDefinition = { key: string; name: string; description: string; category: "growth" | "commerce" | "engagement" | "operations" | "content"; icon: string; accent: string; defaultBlock: string; manifest?: Record<string, unknown> };
 
 // Typed cache of the database module manifest. A profile's business type never decides its apps.
 export const moduleRegistry: Record<ModuleKey, ModuleDefinition> = {

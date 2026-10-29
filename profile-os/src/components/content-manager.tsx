@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import type { ModuleKey } from "../lib/modules";
 
-const kindFor: Partial<Record<ModuleKey, string>> = { menu: "menu", shop: "shop", catalog: "catalog", events: "events", live_session: "songs" };
-export function ContentManager({ profileId, moduleKey }: { profileId: string; moduleKey: ModuleKey }) {
+const kindFor: Record<string, string> = { menu: "menu", shop: "shop", catalog: "catalog", events: "events", live_session: "songs" };
+export function ContentManager({ profileId, moduleKey }: { profileId: string; moduleKey: string }) {
   const kind = kindFor[moduleKey]; const [items, setItems] = useState<Array<{ id: string; title: string; summary?: string | null; price_from?: number | null }>>([]); const [title, setTitle] = useState(""); const [summary, setSummary] = useState(""); const [price, setPrice] = useState(""); const [notice, setNotice] = useState("");
   const load = async () => { if (!kind) return; const r = await fetch(`/api/studio/profiles/${profileId}/content?kind=${kind}`); if (r.ok) setItems((await r.json()).items); };
   useEffect(() => { void load(); }, [profileId, kind]);

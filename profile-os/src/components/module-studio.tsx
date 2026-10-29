@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { moduleRegistry, type ModuleDefinition, type ModuleKey } from "../lib/modules";
+import { moduleRegistry as starterRegistry, type ModuleDefinition, type ModuleKey } from "../lib/modules";
 import { ContentManager } from "./content-manager";
 
-type Block = { id: string; module_key: ModuleKey; block_key: string; title: string | null; config: Record<string, unknown> | null; sort_order: number; is_visible: boolean };
-type Installed = { profile_id: string; module_key: ModuleKey; is_enabled: boolean; config: Record<string, unknown> | null };
+const moduleRegistry: Record<string, ModuleDefinition> = new Proxy(starterRegistry as Record<string, ModuleDefinition>, { get: (target, key: string) => target[key] ?? { key, name: key.replaceAll("-", " "), description: "Custom app block", category: "content", icon: "◈", accent: "#38bdf8", defaultBlock: "block" } });
+
+type Block = { id: string; module_key: string; block_key: string; title: string | null; config: Record<string, unknown> | null; sort_order: number; is_visible: boolean };
+type Installed = { profile_id: string; module_key: string; is_enabled: boolean; config: Record<string, unknown> | null };
 type Profile = { id: string; slug: string; display_name: string; short_description: string | null; status: string; is_public: boolean; theme: Record<string, string>; recommendation_goals: string[]; installed: Installed[]; blocks: Block[] };
 type StudioData = { profiles: Profile[]; modules: ModuleDefinition[] };
 const categories = ["all", "growth", "commerce", "engagement", "content"] as const;
@@ -23,10 +25,10 @@ export function ModuleStudio() {
   const load = async () => { const response = await fetch("/api/studio", { cache: "no-store" }); if (!response.ok) return location.assign("/login"); const next = await response.json() as StudioData; setData(next); setProfileId((current) => current || next.profiles[0]?.id || ""); };
   useEffect(() => { void load(); }, []);
   const profile = data?.profiles.find((item) => item.id === profileId); const installed = new Set(profile?.installed.filter((item) => item.is_enabled).map((item) => item.module_key) ?? []); const apps = useMemo(() => (data?.modules ?? []).filter((app) => filter === "all" || app.category === filter), [data, filter]);
-  async function moduleChange(key: ModuleKey, enable: boolean) { if (!profile) return; setBusy(true); setError(""); const response = await fetch(`/api/studio/profiles/${profile.id}/modules`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ moduleKey: key, enable }) }); setBusy(false); if (!response.ok) return setError("Could not update that app."); await load(); }
+  async function moduleChange(key: string, enable: boolean) { if (!profile) return; setBusy(true); setError(""); const response = await fetch(`/api/studio/profiles/${profile.id}/modules`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ moduleKey: key, enable }) }); setBusy(false); if (!response.ok) return setError("Could not update that app."); await load(); }
   async function toggleGoal(goal: string) { if (!profile) return; const next = profile.recommendation_goals.includes(goal) ? profile.recommendation_goals.filter((item) => item !== goal) : [...profile.recommendation_goals, goal]; setBusy(true); const response = await fetch(`/api/studio/profiles/${profile.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ recommendation_goals: next }) }); setBusy(false); if (!response.ok) return setError("Could not save recommendations."); await load(); }
   async function saveStack(blocks: Block[]) { if (!profile) return; setBusy(true); const response = await fetch(`/api/studio/profiles/${profile.id}/blocks`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ blocks }) }); setBusy(false); if (!response.ok) return setError("Could not save block order."); await load(); }
-  async function addBlock(moduleKey: ModuleKey) { if (!profile) return; setBusy(true); const response = await fetch(`/api/studio/profiles/${profile.id}/blocks`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ moduleKey }) }); setBusy(false); if (!response.ok) return setError("Install the app before adding a block."); await load(); }
+  async function addBlock(moduleKey: string) { if (!profile) return; setBusy(true); const response = await fetch(`/api/studio/profiles/${profile.id}/blocks`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ moduleKey }) }); setBusy(false); if (!response.ok) return setError("Install the app before adding a block."); await load(); }
   async function saveBlock(block: Block) { if (!profile) return; setBusy(true); const response = await fetch(`/api/studio/profiles/${profile.id}/blocks/${block.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ title: block.title, config: block.config, is_visible: block.is_visible }) }); setBusy(false); if (!response.ok) return setError("Could not save block settings."); setSelected(null); await load(); }
   const move = (block: Block, direction: -1 | 1) => { const blocks = [...(profile?.blocks ?? [])]; const index = blocks.findIndex((item) => item.id === block.id); const target = index + direction; if (target < 0 || target >= blocks.length) return; [blocks[index], blocks[target]] = [blocks[target], blocks[index]]; void saveStack(blocks); };
   if (!data) return <main className="studio"><p>Loading your Profile OS…</p></main>;
